@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
@@ -219,10 +219,46 @@ const INIT_FORM = {
   name:'',companyName:'',companyType:'',sector:'',state:'',businessAge:'',
   turnover:'',netProfit:'',employees:'',assets:'',liabilities:'',creditScore:'',
   gst:'Yes',udyam:'No',existingLoans:'No',collateral:'No',exportBiz:'No',womenLed:'No',scstOwned:'No',
-  loanPurpose:'',loanAmount:''
+  loanPurpose:'',loanAmount:'',
+  companyDescription:'',marketPresence:'',riskIndicators:'',companyConfidenceScore:''
 };
 const CO_TYPES = ['Proprietorship','Partnership','LLP','Private Limited','Public Limited','OPC'];
 const SECTORS = ['Manufacturing','Trading','Services','Technology','Agriculture','Food Processing','Textile','Construction','Healthcare','Logistics','Retail','Education','Handicraft','Tourism'];
+
+const COMPANY_INTELLIGENCE_FIELDS = [
+  'company_name','industry','business_activity','estimated_company_size','headquarters_location',
+  'years_in_operation','company_description','market_presence','risk_indicators','confidence_score'
+];
+
+const coerceCompanyIntelPayload = (payload) => {
+  if (!payload) return null;
+  let data = payload;
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data); } catch { return null; }
+  }
+  if (data && typeof data === 'object' && data.data && typeof data.data === 'object') {
+    data = data.data;
+  }
+  if (!data || typeof data !== 'object') return null;
+  return COMPANY_INTELLIGENCE_FIELDS.reduce((acc, key) => {
+    acc[key] = data[key];
+    return acc;
+  }, {});
+};
+
+const mapCompanyIntelToForm = (intel, previous) => ({
+  ...previous,
+  companyName: intel.company_name || previous.companyName,
+  companyType: intel.business_activity || previous.companyType,
+  sector: intel.industry || previous.sector,
+  state: intel.headquarters_location || previous.state,
+  businessAge: intel.years_in_operation != null ? String(intel.years_in_operation) : previous.businessAge,
+  employees: intel.estimated_company_size || previous.employees,
+  companyDescription: intel.company_description || previous.companyDescription,
+  marketPresence: intel.market_presence || previous.marketPresence,
+  riskIndicators: intel.risk_indicators || previous.riskIndicators,
+  companyConfidenceScore: intel.confidence_score != null ? String(intel.confidence_score) : previous.companyConfidenceScore,
+});
 
 function AssessmentPage({ nav, setReport }) {
   const [step,   setStep]   = useState(1);
@@ -231,10 +267,52 @@ function AssessmentPage({ nav, setReport }) {
   const [loading,setLoading]= useState(false);
   const [loadMsg,setLoadMsg]= useState('');
   const [err,    setErr]    = useState('');
+  const [companyIntelLoading, setCompanyIntelLoading] = useState(false);
+  const [companyIntelWarning, setCompanyIntelWarning] = useState('');
+  const [companyIntelErr, setCompanyIntelErr] = useState('');
   const fRef = useRef(null);
+  const intelReqRef = useRef(0);
 
   // Stable field updater — won't cause child remounting
   const upd = useCallback((k, v) => setForm(prev => ({ ...prev, [k]: v })), []);
+
+  useEffect(() => {
+    const companyName = form.companyName.trim();
+    if (companyName.length < 3) {
+      setCompanyIntelErr('');
+      setCompanyIntelWarning('');
+      setCompanyIntelLoading(false);
+      return;
+    }
+
+    const requestId = ++intelReqRef.current;
+    const timer = setTimeout(async () => {
+      setCompanyIntelLoading(true);
+      setCompanyIntelErr('');
+      try {
+        const res = await fetch('/api/company-intelligence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyName })
+        });
+        if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+        const body = await res.json();
+        const intel = coerceCompanyIntelPayload(body);
+        if (!intel) throw new Error('Invalid company intelligence response format.');
+        if (requestId !== intelReqRef.current) return;
+        setForm(prev => mapCompanyIntelToForm(intel, prev));
+        setCompanyIntelWarning(Number(intel.confidence_score) < 60 ? 'Please verify company details.' : '');
+      } catch (e) {
+        if (requestId !== intelReqRef.current) return;
+        console.error('Company intelligence lookup failed:', e);
+        setCompanyIntelErr('Unable to auto-fill company details right now.');
+      } finally {
+        if (requestId === intelReqRef.current) setCompanyIntelLoading(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [form.companyName]);
 
   const toB64 = f => new Promise((res,rej)=>{ const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f); });
 
@@ -393,7 +471,12 @@ function AssessmentPage({ nav, setReport }) {
           <p style={{fontSize:12,color:C.teal,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em',margin:'0 0 18px'}}>Company Details</p>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             <FieldInput label="Your Name"        value={form.name}        onChange={v=>upd('name',v)}/>
-            <FieldInput label="Company Name"     value={form.companyName} onChange={v=>upd('companyName',v)}/>
+            <div>
+              <FieldInput label="Company Name" value={form.companyName} onChange={v=>upd('companyName',v)}/>
+              {companyIntelLoading && <p style={{fontSize:12,color:C.teal,margin:'8px 0 0'}}>Fetching company intelligence…</p>}
+              {companyIntelErr && <p style={{fontSize:12,color:C.red,margin:'8px 0 0'}}>{companyIntelErr}</p>}
+              {companyIntelWarning && <p style={{fontSize:12,color:C.amber,margin:'8px 0 0'}}>{companyIntelWarning}</p>}
+            </div>
             <FieldInput label="Company Type"     value={form.companyType} onChange={v=>upd('companyType',v)} opts={CO_TYPES}/>
             <FieldInput label="Business Sector"  value={form.sector}      onChange={v=>upd('sector',v)}      opts={SECTORS}/>
             <FieldInput label="State / UT"       value={form.state}       onChange={v=>upd('state',v)}       opts={ALL_STATES}/>
