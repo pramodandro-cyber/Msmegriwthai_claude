@@ -238,7 +238,50 @@ function AssessmentPage({ nav, setReport }) {
 
   const toB64 = f => new Promise((res,rej)=>{ const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f); });
 
+  const inferAiEnrichment = (f) => {
+    const normalizedSector = (f.sector || '').trim();
+    const inferredIndustry = normalizedSector === 'Food Processing' ? 'Manufacturing' : (normalizedSector || null);
+    const inferredMarketPresence = f.exportBiz === 'Yes'
+      ? 'Domestic + Export (AI-enriched from profile signals)'
+      : 'Domestic market';
+    return {
+      industry: inferredIndustry,
+      market_presence: inferredMarketPresence,
+      confidence: 0.74,
+      source: 'ai_enriched'
+    };
+  };
+
+  const detectExportActivity = (marketPresence = '') => /export|international|overseas/i.test(marketPresence);
+
   const buildReport = (f) => {
+    const aiEnrichment = inferAiEnrichment(f);
+    const mergedIndustry = aiEnrichment.industry || f.sector || 'General';
+    const exportDetected = detectExportActivity(aiEnrichment.market_presence) || f.exportBiz === 'Yes';
+    const provenance = {
+      fields: {
+        industry: {
+          formValue: f.sector || null,
+          enrichedValue: aiEnrichment.industry,
+          finalValue: mergedIndustry,
+          source: aiEnrichment.industry ? 'ai_enriched' : 'form'
+        },
+        market_presence: {
+          formValue: f.exportBiz === 'Yes' ? 'Export intent declared' : 'No export intent declared',
+          enrichedValue: aiEnrichment.market_presence,
+          finalValue: aiEnrichment.market_presence,
+          source: 'ai_enriched'
+        },
+        export_activity: {
+          formValue: f.exportBiz,
+          enrichedValue: detectExportActivity(aiEnrichment.market_presence) ? 'Yes' : 'No',
+          finalValue: exportDetected ? 'Yes' : 'No',
+          source: detectExportActivity(aiEnrichment.market_presence) ? 'ai_enriched' : 'form'
+        }
+      },
+      aiEnrichment
+    };
+
     const t = parseFloat(f.turnover)||0, p = parseFloat(f.netProfit)||0;
     const a = parseFloat(f.assets)||0, l = parseFloat(f.liabilities)||0;
     const emp = parseInt(f.employees)||0, cs = parseInt(f.creditScore)||650;
@@ -269,8 +312,47 @@ function AssessmentPage({ nav, setReport }) {
     else ineligible.push({name:'Stand-Up India',reason:'Available only for women-led or SC/ST enterprises'});
     if(f.exportBiz==='Yes') eligible.push({name:'ECGC Export Credit',ministry:'Ministry of Commerce',benefit:'Export credit insurance and guarantees',amount:'Up to ₹5 Cr',type:'Central'});
     else ineligible.push({name:'ECGC Export Credit',reason:'Business must be export-oriented'});
+
+    const ruleBasedSchemes = [];
+    if(mergedIndustry === 'Manufacturing') {
+      ruleBasedSchemes.push(
+        {name:'Technology Upgradation Fund',ministry:'Ministry of MSME',benefit:'Support for machinery modernization and technology upgrades',amount:'As per scheme',type:'Central',trigger:'industry=Manufacturing'},
+        {name:'Manufacturing Subsidy',ministry:'State Industries Department',benefit:'Capital subsidy support for eligible manufacturing units',amount:'As per scheme',type:'State',trigger:'industry=Manufacturing'}
+      );
+    }
+    if(exportDetected) {
+      ruleBasedSchemes.push({name:'Export Credit Schemes',ministry:'Ministry of Commerce',benefit:'Pre and post-shipment credit support for exporters',amount:'As per scheme',type:'Central',trigger:'market_presence indicates export'});
+    }
+
+    const schemeScore = (scheme) => {
+      let score = 45;
+      if(scheme.type === 'Central') score += 8;
+      if(scheme.type === 'State') score += 4;
+      if(/export/i.test(scheme.name) && exportDetected) score += 20;
+      if(/manufacturing|technology/i.test(`${scheme.name} ${scheme.benefit}`) && mergedIndustry === 'Manufacturing') score += 18;
+      if(f.udyam === 'Yes') score += 4;
+      if(f.gst === 'Yes') score += 4;
+      if(provenance.fields.industry.source === 'ai_enriched') score += 3;
+      if(provenance.fields.export_activity.source === 'ai_enriched' && /export/i.test(scheme.name)) score += 6;
+      return Math.min(99, score);
+    };
+
     if(stateS.length) eligible.push({name:stateS[0].name,ministry:`${f.state} Government`,benefit:stateS[0].benefit,amount:'As per scheme',type:'State'});
     if(stateS.length>1) eligible.push({name:stateS[1].name,ministry:`${f.state} Government`,benefit:stateS[1].benefit,amount:'As per scheme',type:'State'});
+
+    const rankedSchemes = [...eligible, ...ruleBasedSchemes]
+      .map(s => ({
+        ...s,
+        score: schemeScore(s),
+        dataSources: {
+          industry: provenance.fields.industry.source,
+          export_activity: provenance.fields.export_activity.source
+        }
+      }))
+      .sort((a,b) => b.score - a.score);
+
+    eligible.splice(0, eligible.length, ...rankedSchemes);
+
     ineligible.push({name:'PLI Scheme',reason:'Turnover below ₹100 Cr threshold for PLI eligibility'});
     const flags = [];
     if(cs<650) flags.push({flag:'Low Credit Score',severity:'High',desc:`Credit score ${cs} is below the 700 threshold preferred by most lenders. Improve by clearing dues on time.`});
@@ -278,8 +360,25 @@ function AssessmentPage({ nav, setReport }) {
     if(p<=0) flags.push({flag:'No reported profit',severity:'Medium',desc:'Net profit is zero or negative. Lenders will require explanation and future projections.'});
     if(f.udyam==='No') flags.push({flag:'No Udyam Registration',severity:'Medium',desc:'Without Udyam registration you miss out on MSME-priority lending rates and scheme access.'});
     if(flags.length===0) flags.push({flag:'No major risk flags',severity:'Low',desc:'Your profile looks clean. Maintain GST compliance and credit discipline to keep it that way.'});
+    const ruleBasedRecommendations = [];
+    if(mergedIndustry === 'Manufacturing') {
+      ruleBasedRecommendations.push(
+        {title:'Technology Upgradation Fund',desc:'You are tagged under Manufacturing from merged profile data. Prioritize this fund for modernization capex support.',priority:'High',source:'rule_engine'},
+        {title:'Manufacturing Subsidy',desc:'Manufacturing enrichment signal triggered this subsidy recommendation for state/central capex incentives.',priority:'High',source:'rule_engine'}
+      );
+    }
+    if(exportDetected) {
+      ruleBasedRecommendations.push({title:'Export Credit Schemes',desc:'Export activity detected from market_presence enrichment. Evaluate pre and post-shipment credit lines.',priority:'High',source:'rule_engine'});
+    }
+
     return {
       msme, fundingScore:score,
+      enrichmentProfile:{
+        industry: mergedIndustry,
+        market_presence: aiEnrichment.market_presence,
+        export_activity: exportDetected ? 'Yes' : 'No'
+      },
+      provenance,
       scoreBreakdown:[
         {cat:'Financial Health',val:Math.min(95,Math.max(30,p>0?60+Math.round(parseFloat(margin)):35))},
         {cat:'Compliance',val:(f.gst==='Yes'?50:0)+(f.udyam==='Yes'?50:0)||30},
@@ -317,11 +416,13 @@ function AssessmentPage({ nav, setReport }) {
       ],
       creditRiskFlags: flags,
       recommendations:[
+        ...ruleBasedRecommendations,
         {title:f.udyam==='No'?'Register on Udyam Portal':'Maintain Udyam compliance',desc:f.udyam==='No'?'Udyam registration is free and unlocks MSME-priority lending, lower interest rates, and 200+ scheme eligibilities.':'Ensure your Udyam certificate is up to date and turnover details are accurate.',priority:'High'},
         {title:'Improve CIBIL score',desc:'Pay all EMIs and credit card dues on time. Keep credit utilisation below 30%. A score above 700 unlocks the best loan rates.',priority:cs<700?'High':'Low'},
         {title:'Apply for CGTMSE guarantee',desc:'CGTMSE provides a 75% government guarantee on your loan, making it much easier to get approved without collateral.',priority:f.collateral==='No'?'High':'Medium'},
         {title:`Explore ${f.state||'state'} capital subsidy`,desc:`Apply through the ${f.state||'state'} Industries Department for a capital subsidy of 20–35% on new machinery and equipment purchases.`,priority:'Medium'},
       ],
+      schemeRanking: rankedSchemes,
       fundingRoadmap:[
         {phase:'Phase 1',timeline:'Month 1–2',action:`Register on Udyam portal${f.udyam==='No'?'':', apply for MUDRA/SIDBI working capital loan'} and gather 2 years ITR + bank statements`,target:`Secure ₹${wc} L working capital`},
         {phase:'Phase 2',timeline:'Month 3–6',action:`Apply for ${f.state||'state'} capital subsidy and CGTMSE-backed term loan through ${f.collateral==='Yes'?'your bank':'SIDBI'}`,target:`Receive machinery/equipment funding of ₹${Math.round(tl*0.4)} L`},
