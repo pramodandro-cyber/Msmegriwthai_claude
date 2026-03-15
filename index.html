@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f9ff;color:#1e293b}
+.hdr{background:linear-gradient(135deg,#1e40af,#0891b2);color:#fff;padding:28px 24px;text-align:center}
+.hdr h1{font-size:22px;font-weight:900;margin-bottom:6px}
+.hdr p{font-size:13px;opacity:.75}
+.wrap{max-width:700px;margin:0 auto;padding:24px 18px}
+.step{background:#fff;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.sh{display:flex;align-items:center;gap:14px;padding:16px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.sn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#1e40af,#0891b2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;flex-shrink:0}
+.st{font-size:16px;font-weight:800;color:#1e293b}
+.ss{font-size:12px;color:#64748b;margin-top:2px}
+.sb{padding:18px 20px}
+.row{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.row:last-child{margin-bottom:0}
+.ic{font-size:20px;flex-shrink:0;margin-top:1px}
+.tx{font-size:14px;line-height:1.7;color:#334155}
+.tx strong{color:#1e40af;font-weight:700}
+.tx code{background:#1e293b;color:#7dd3fc;padding:1px 7px;border-radius:4px;font-size:12px;font-family:monospace}
+.tip{background:#eff6ff;border-left:4px solid #3b82f6;border-radius:0 8px 8px 0;padding:11px 14px;margin-top:12px;font-size:13px;color:#1e40af;line-height:1.6}
+.warn{background:#fefce8;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;padding:11px 14px;margin-top:12px;font-size:13px;color:#92400e;line-height:1.6}
+.ok{background:#f0fdf4;border-left:4px solid #10b981;border-radius:0 8px 8px 0;padding:11px 14px;margin-top:12px;font-size:13px;color:#065f46;line-height:1.6}
+.done{background:linear-gradient(135deg,#1e293b,#1e40af);border-radius:14px;padding:28px;text-align:center;color:#fff;margin-top:8px}
+.done h3{font-size:20px;font-weight:900;margin-bottom:8px}
+.done p{font-size:13px;opacity:.7;line-height:1.7}
+.badge{display:inline-block;background:rgba(6,182,212,.15);color:#06b6d4;font-size:11px;font-weight:700;padding:2px 10px;border-radius:100px;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div style="font-size:32px;margin-bottom:10px">🚀</div>
+  <h1>Deploy MSMEGrowth AI to GitHub + Vercel</h1>
+  <p>No coding knowledge needed · 100% free · Live in 15 minutes</p>
+</div>
+
+<div class="wrap">
+
+<!-- STEP 1 -->
+<div class="step">
+  <div class="sh"><div class="sn">1</div><div><div class="st">Copy your app code <span class="badge">1 min</span></div><div class="ss">Get the full code from Claude</div></div></div>
+  <div class="sb">
+    <div class="row"><div class="ic">👁️</div><div class="tx">Look at the <strong>MSMEGrowth AI artifact</strong> in this chat (the app preview panel)</div></div>
+    <div class="row"><div class="ic">🖱️</div><div class="tx">At the top-right corner of the artifact, click the <strong>&lt;/&gt; icon</strong> — this shows the raw code</div></div>
+    <div class="row"><div class="ic">📋</div><div class="tx">Press <code>Ctrl+A</code> to select all → then <code>Ctrl+C</code> to copy. <strong>Don't copy anything else until Step 3.</strong></div></div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step">
+  <div class="sh"><div class="sn">2</div><div><div class="st">Create GitHub account <span class="badge">2 min</span></div><div class="ss">Skip if you already have one</div></div></div>
+  <div class="sb">
+    <div class="row"><div class="ic">🌐</div><div class="tx">Open a new tab → go to <strong>github.com</strong> → click <strong>Sign up</strong></div></div>
+    <div class="row"><div class="ic">✍️</div><div class="tx">Enter your email, create a password, pick a username like <code>pramodmsme</code></div></div>
+    <div class="row"><div class="ic">📧</div><div class="tx">Check your email → click the verification link GitHub sends you</div></div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step">
+  <div class="sh"><div class="sn">3</div><div><div class="st">Create a new GitHub repository <span class="badge">1 min</span></div><div class="ss">This is the folder that holds your code</div></div></div>
+  <div class="sb">
+    <div class="row"><div class="ic">➕</div><div class="tx">After logging in to GitHub, click the <strong>+ icon</strong> (top right) → click <strong>New repository</strong></div></div>
+    <div class="row"><div class="ic">✍️</div><div class="tx">Repository name: <code>msme-growth-ai</code></div></div>
+    <div class="row"><div class="ic">🔓</div><div class="tx">Make sure it's set to <strong>Public</strong></div></div>
+    <div class="row"><div class="ic">☑️</div><div class="tx">Tick the box that says <strong>"Add a README file"</strong></div></div>
+    <div class="row"><div class="ic">✅</div><div class="tx">Click the green <strong>Create repository</strong> button</div></div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step">
+  <div class="sh"><div class="sn">4</div><div><div class="st">Create the app file in GitHub <span class="badge">3 min</span></div><div class="ss">Paste your code directly — no downloads needed</div></div></div>
+  <div class="sb">
+    <div class="row"><div class="ic">➕</div><div class="tx">Inside your new repo, click <strong>Add file</strong> → click <strong>Create new file</strong></div></div>
+    <div class="row"><div class="ic">✍️</div><div class="tx">In the filename box at the top, type exactly: <code>index.html</code></div></div>
+    <div class="row"><div class="ic">📋</div><div class="tx">Click in the big empty code area below → press <code>Ctrl+A</code> to select any existing text → press <strong>Delete</strong> → then press <code>Ctrl+V</code> to paste your copied code</div></div>
+    <div class="warn">⚠️ The code you paste must start with <code>import</code>. If it doesn't, go back to Step 1 and re-copy from the &lt;/&gt; icon in Claude.</div>
+    <div class="row" style="margin-top:14px"><div class="ic">💾</div><div class="tx">Scroll down → click the green <strong>Commit changes</strong> button → click <strong>Commit changes</strong> again in the popup</div></div>
+    <div class="ok">✅ Your code is now saved on GitHub!</div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step">
+  <div class="sh"><div class="sn">5</div><div><div class="st">Deploy live on Vercel <span class="badge">3 min</span></div><div class="ss">This makes your app accessible to anyone on the internet — free</div></div></div>
+  <div class="sb">
+    <div class="row"><div class="ic">🌐</div><div class="tx">Open a new tab → go to <strong>vercel.com</strong></div></div>
+    <div class="row"><div class="ic">🔑</div><div class="tx">Click <strong>Sign Up</strong> → choose <strong>Continue with GitHub</strong> — this links both accounts automatically</div></div>
+    <div class="row"><div class="ic">➕</div><div class="tx">Click <strong>Add New Project</strong> → you'll see your GitHub repos → click <strong>Import</strong> next to <code>msme-growth-ai</code></div></div>
+    <div class="row"><div class="ic">⚙️</div><div class="tx">Under <strong>Framework Preset</strong> select <strong>Vite</strong></div></div>
+    <div class="row"><div class="ic">🚀</div><div class="tx">Click the big <strong>Deploy</strong> button. Wait ~2 minutes.</div></div>
+    <div class="row"><div class="ic">🎉</div><div class="tx">Vercel gives you a URL like <strong>msme-growth-ai.vercel.app</strong> — click it. Your platform is now live!</div></div>
+    <div class="tip">💡 Every time you update the code on GitHub, Vercel will automatically redeploy your site within 2 minutes.</div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div class="done">
+  <div style="font-size:40px;margin-bottom:12px">🎊</div>
+  <h3>MSMEGrowth AI is Live!</h3>
+  <p>Share your Vercel link with anyone — works on mobile and desktop.<br/><br/>
+  <strong>Your two permanent links:</strong><br/>
+  Code → <code style="color:#7dd3fc">github.com/YOUR_USERNAME/msme-growth-ai</code><br/>
+  Live site → <code style="color:#7dd3fc">msme-growth-ai.vercel.app</code><br/><br/>
+  When ready, come back to Claude to connect the Gemini AI API so reports use real AI.</p>
+</div>
+
+</div>
+</body>
+</html>
