@@ -1,5 +1,19 @@
-import { useState, useRef, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSME Growth AI</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;">
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useRef, useCallback } = React;
+const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } = Recharts;
 
 // ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = { blue:'#1e40af',teal:'#0891b2',cyan:'#06b6d4',green:'#10b981',amber:'#f59e0b',red:'#ef4444',navy:'#0f172a',text:'#1e293b',muted:'#64748b',border:'#e2e8f0',bg:'#f0f9ff',white:'#ffffff',indigo:'#4f46e5' };
@@ -870,7 +884,7 @@ function HomePage({ nav }) {
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
-export default function App() {
+function App() {
   const [page,      setPage]      = useState('home');
   const [report,    setReport]    = useState(null);
   const [authState, setAuthState] = useState(false);
@@ -889,3 +903,9 @@ export default function App() {
     </div>
   );
 }
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
